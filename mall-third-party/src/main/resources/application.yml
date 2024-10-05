@@ -13,4 +13,4 @@ spring:
     name: mall-third-party
 
 server:
-  port: 30000
+  port: 40000
