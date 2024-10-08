@@ -28,6 +28,12 @@ public class SpuInfoController {
     private SpuInfoService spuInfoService;
 
     //product/spuinfo/{spuId}/up
+
+    /**
+     * 上架商品
+     * @param spuId
+     * @return
+     */
     @PostMapping("/{spuId}/up")
     public R spuUp(@PathVariable("spuId") Long spuId){
         spuInfoService.spuUp(spuId);
@@ -57,7 +63,8 @@ public class SpuInfoController {
     }
 
     /**
-     * 保存
+     * 保存发布商品信息
+     * @param vo
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:spuinfo:save")

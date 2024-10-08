@@ -26,12 +26,19 @@ public class ProductSaveServiceImpl implements ProductSaveService {
     @Autowired
     private RestHighLevelClient client;
 
+    /**
+     * 商品上架，写入es
+     * @param skuEsModels
+     * @return
+     * @throws IOException
+     */
     @Override
     public boolean productStatusUp(List<SkuEsModel> skuEsModels) throws IOException {
 
         BulkRequest bulkRequest = new BulkRequest();
 
         for (SkuEsModel skuEsModel : skuEsModels) {
+            //es映射
             IndexRequest indexRequest = new IndexRequest(EsConstant.PRODUCT_INDEX);
             indexRequest.id(skuEsModel.getSkuId().toString());
 

@@ -1,5 +1,6 @@
 package com.mall.product.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.mall.product.dao.AttrAttrgroupRelationDao;
 import com.mall.product.dao.AttrGroupDao;
 import com.mall.product.dao.CategoryDao;
@@ -7,6 +8,7 @@ import com.mall.product.entity.AttrAttrgroupRelationEntity;
 import com.mall.product.entity.AttrGroupEntity;
 import com.mall.product.entity.CategoryEntity;
 import com.mall.product.service.AttrAttrgroupRelationService;
+import com.mall.product.service.CategoryService;
 import com.mall.product.vo.AttrRelationVo;
 import com.mall.product.vo.AttrRespVo;
 import com.mall.product.vo.AttrVo;
@@ -41,6 +43,8 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
     private AttrGroupDao attrGroupDao;
     @Autowired
     private CategoryDao categoryDao;
+    @Autowired
+    private CategoryService categoryService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -180,6 +184,10 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         }
     }
 
+    /**
+     *
+     * @param vos
+     */
     @Override
     public void deleteRelation(AttrRelationVo[] vos) {
         List<AttrAttrgroupRelationEntity> relationEntities = Arrays.stream(vos).map((item) -> {
@@ -211,7 +219,7 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
 
 
         QueryWrapper<AttrEntity> queryWrapper = new QueryWrapper<AttrEntity>()
-                .eq("catelog_id", catelogId).eq("attr_type",1);
+                .eq("catelog_id", catelogId).eq("attr_type", 1);
         if (attrIds.size() > 0 && attrIds != null) {
             queryWrapper.notIn("attr_id", attrIds);
         }
@@ -231,6 +239,61 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
     @Override
     public List<Long> selectSearchAttrs(List<Long> attrIds) {
         return baseMapper.selectSearchAttrs(attrIds);
+    }
+
+    /**
+     * 获取属性信息
+     *
+     * @param attrId
+     * @return
+     */
+    @Override
+    public AttrRespVo getAttrInfo(Long attrId) {
+        AttrRespVo attrRespVo = new AttrRespVo();
+        AttrEntity attrEntity = baseMapper.selectById(attrId);
+        BeanUtils.copyProperties(attrEntity, attrRespVo);
+        AttrAttrgroupRelationEntity attrAttrgroupRelationEntity = relationDao.selectOne(new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_id", attrId));
+
+        if (attrAttrgroupRelationEntity != null) {
+            attrRespVo.setAttrGroupId(attrAttrgroupRelationEntity.getAttrGroupId());
+            AttrGroupEntity attrGroupEntity = attrGroupDao.selectById(attrAttrgroupRelationEntity.getAttrGroupId());
+            if (attrGroupEntity != null) {
+                attrRespVo.setGroupName(attrGroupEntity.getAttrGroupName());
+            }
+        }
+
+
+        Long catelogId = attrEntity.getCatelogId();
+        Long[] catelogPath = categoryService.findCatelogPath(catelogId);
+        attrRespVo.setCatelogPath(catelogPath);
+        CategoryEntity categoryEntity = categoryDao.selectById(catelogId);
+        if (categoryEntity != null) {
+            attrRespVo.setCatelogName(categoryEntity.getName());
+        }
+
+        return attrRespVo;
+    }
+
+    /**
+     * 更新属性
+     * @param attr
+     */
+    @Override
+    @Transactional
+    public void updateAttr(AttrVo attr) {
+        AttrEntity attrEntity = new AttrEntity();
+        BeanUtils.copyProperties(attr,attrEntity);
+        baseMapper.updateById(attrEntity);
+
+        Integer count = relationDao.selectCount(new QueryWrapper<AttrAttrgroupRelationEntity>().eq("attr_id", attr.getAttrId()));
+        AttrAttrgroupRelationEntity relationEntity = new AttrAttrgroupRelationEntity();
+        relationEntity.setAttrGroupId(attr.getAttrGroupId());
+        relationEntity.setAttrId(attrEntity.getAttrId());
+        if(count>0){
+            relationDao.update(relationEntity,new UpdateWrapper<AttrAttrgroupRelationEntity>().eq("attr_id",attr.getAttrId()));
+        }else {
+            relationDao.insert(relationEntity);
+        }
     }
 
 }

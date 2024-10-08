@@ -46,14 +46,18 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         return new PageUtils(page);
     }
 
-    //查出所有商品分类
+    /**
+     * 查出所有商品分类
+     *
+     * @return
+     */
     @Override
     public List<CategoryEntity> listWithTree() {
         List<CategoryEntity> entities = baseMapper.selectList(null);
 
         List<CategoryEntity> level1Menus = entities.stream()
                 .filter(categoryEntity -> categoryEntity.getParentCid() == 0)
-                .map((menu) -> {
+                .map(menu -> {
                     menu.setChildren(getChildren(menu, entities));
                     return menu;
                 })
@@ -81,7 +85,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
         return (Long[]) path.toArray(new Long[path.size()]);
     }
-    @Cacheable(value = {"category"},key = "#root.method.name")
+
+    @Cacheable(value = {"category"}, key = "#root.method.name")
     @Override
     public List<CategoryEntity> getLevel1Categories() {
         System.out.println("获取一级分类......");
@@ -188,8 +193,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
 
     @Caching(evict = {
-            @CacheEvict(value = "category",key="'getLevel1Categories'"),
-            @CacheEvict(value = "category",key="'getCatalogJson'")
+            @CacheEvict(value = "category", key = "'getLevel1Categories'"),
+            @CacheEvict(value = "category", key = "'getCatalogJson'")
     })
     @Transactional
     @Override
@@ -214,6 +219,13 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         return path;
     }
 
+    /**
+     * 组装三级分类
+     *
+     * @param root
+     * @param all
+     * @return
+     */
     private List<CategoryEntity> getChildren(CategoryEntity root, List<CategoryEntity> all) {
         List<CategoryEntity> children = all.stream().filter(categoryEntity -> {
                     return categoryEntity.getParentCid() == root.getCatId();
@@ -227,6 +239,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
                             - (menu2.getSort() == null ? 0 : menu2.getSort());
                 })
                 .collect(Collectors.toList());
+
         return children;
     }
 

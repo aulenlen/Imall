@@ -21,6 +21,11 @@ public class ElasticSaveController {
     @Autowired
     private ProductSaveService productSaveService;
 
+    /**
+     * 商品上架，写入es
+     * @param skuEsModels
+     * @return
+     */
     @PostMapping("/product")
     public R productStatusUp(@RequestBody List<SkuEsModel> skuEsModels) {
         boolean b = false;

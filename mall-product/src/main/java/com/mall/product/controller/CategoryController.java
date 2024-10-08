@@ -22,7 +22,7 @@ import com.mall.common.utils.R;
  * 商品三级分类
  *
  * @author aulen
- * @email 772039675@qq.com
+ * @email 772049675@qq.com
  * @date 2024-09-05 23:13:19
  */
 @RestController
@@ -71,7 +71,7 @@ public class CategoryController {
     @RequestMapping("/update")
     //@RequiresPermissions("product:category:update")
     public R update(@RequestBody CategoryEntity category){
-		categoryService.updateById(category);
+//		categoryService.updateById(category);
         categoryService.updateCascade(category);
         return R.ok();
     }

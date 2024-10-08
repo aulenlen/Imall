@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.mall.common.utils.PageUtils;
 import com.mall.product.entity.AttrEntity;
 import com.mall.product.vo.AttrRelationVo;
+import com.mall.product.vo.AttrRespVo;
 import com.mall.product.vo.AttrVo;
 
 import java.util.List;
@@ -33,5 +34,9 @@ public interface AttrService extends IService<AttrEntity> {
     PageUtils getNoRelationAttr(Map<String, Object> params, Long attrgroupId);
 
     List<Long> selectSearchAttrs(List<Long> attrIds);
+
+    AttrRespVo getAttrInfo(Long attrId);
+
+    void updateAttr(AttrVo attr);
 }
 

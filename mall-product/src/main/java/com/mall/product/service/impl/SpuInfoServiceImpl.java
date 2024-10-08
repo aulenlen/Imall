@@ -68,25 +68,33 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         return new PageUtils(page);
     }
 
+    /**
+     * 保存发布商品信息
+     * @param vo
+     */
     @Transactional
     @Override
     public void saveSpuInfo(SpuSaveVo vo) {
+        //保存spu基本信息 pms_spu_info
         SpuInfoEntity spuInfoEntity = new SpuInfoEntity();
         BeanUtils.copyProperties(vo, spuInfoEntity);
         spuInfoEntity.setCreateTime(new Date());
         spuInfoEntity.setUpdateTime(new Date());
         this.save(spuInfoEntity);
 
-        List<String> decript = vo.getDecript();
-        String decriptStr = String.join(",", decript);
+        //保存spu描述信息 pms_spu_info_desc
+        List<String> descriptions = vo.getDecript();
+        String descStr = String.join(",", descriptions);
         SpuInfoDescEntity spuInfoDescEntity = new SpuInfoDescEntity();
         spuInfoDescEntity.setSpuId(spuInfoEntity.getId());
-        spuInfoDescEntity.setDecript(decriptStr);
+        spuInfoDescEntity.setDecript(descStr);
         spuInfoDescService.saveSpuInfoDesc(spuInfoDescEntity);
 
+        //保存spu图片 pms_spu_images
         List<String> images = vo.getImages();
         spuImagesService.save(spuInfoEntity.getId(), images);
 
+        //保存规格参数 pms_product_attr_value
         List<BaseAttrs> baseAttrs = vo.getBaseAttrs();
         List<ProductAttrValueEntity> collect = baseAttrs.stream().map(attr -> {
             ProductAttrValueEntity productAttrValueEntity = new ProductAttrValueEntity();
@@ -100,6 +108,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         }).collect(Collectors.toList());
         productAttrValueService.saveProductAttr(collect);
 
+        //保存spu的积分信息 sms_spu_bounds
         Bounds bounds = vo.getBounds();
         SpuBoundTo spuBoundTo = new SpuBoundTo();
         BeanUtils.copyProperties(bounds, spuBoundTo);
@@ -109,9 +118,10 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             log.error("远程保存积分信息失败");
         }
 
-
+        //保存当前spu对应的sku信息
         List<Skus> skus = vo.getSkus();
         if (skus.size() > 0 && skus != null) {
+            //保存sku的基本信息 pms_sku_info
             skus.forEach(sku -> {
                 String defaultImg = "";
                 for (Images image : sku.getImages()) {
@@ -128,19 +138,21 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 skuInfoEntity.setSkuDefaultImg(defaultImg);
                 skuInfoService.saveSkuInfo(skuInfoEntity);
 
+                //保存sku的图片信息 pms_sku_images
                 Long skuId = skuInfoEntity.getSkuId();
                 List<SkuImagesEntity> skuImagesEntities = sku.getImages().stream().map(img -> {
                     SkuImagesEntity skuImagesEntity = new SkuImagesEntity();
+
                     skuImagesEntity.setSkuId(skuId);
                     skuImagesEntity.setImgUrl(img.getImgUrl());
                     skuImagesEntity.setDefaultImg(img.getDefaultImg());
-
                     return skuImagesEntity;
                 }).filter(entity -> {
-                    return !StringUtils.isEmpty(entity.getImgUrl());
+                    return !StringUtils.isEmpty(entity.getImgUrl()) && entity.getDefaultImg()==1;
                 }).collect(Collectors.toList());
                 skuImagesService.saveBatch(skuImagesEntities);
 
+                //保存sku的销售属性 pms_sku_sale_attr_value
                 List<Attr> attr = sku.getAttr();
                 List<SkuSaleAttrValueEntity> skuSaleAttrValueEntities = attr.stream().map(item -> {
                     SkuSaleAttrValueEntity skuSaleAttrValueEntity = new SkuSaleAttrValueEntity();
@@ -149,6 +161,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 }).collect(Collectors.toList());
                 skuSaleAttrValueService.saveBatch(skuSaleAttrValueEntities);
 
+                //保存sku优惠、满减信息等 sms_sku_ladder\sms_sku_full_reduction\sms_member_price\
                 SkuReductionTo skuReductionTo = new SkuReductionTo();
                 BeanUtils.copyProperties(sku, skuReductionTo);
                 skuReductionTo.setSkuId(skuId);

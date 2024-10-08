@@ -82,7 +82,6 @@ public class AttrAttrgroupRelationController {
     //@RequiresPermissions("product:attrattrgrouprelation:delete")
     public R delete(@RequestBody Long[] ids){
 		attrAttrgroupRelationService.removeByIds(Arrays.asList(ids));
-
         return R.ok();
     }
 

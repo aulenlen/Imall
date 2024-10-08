@@ -116,7 +116,6 @@ public class AttrGroupController {
     //@RequiresPermissions("product:attrgroup:update")
     public R update(@RequestBody AttrGroupEntity attrGroup) {
         attrGroupService.updateById(attrGroup);
-
         return R.ok();
     }
 

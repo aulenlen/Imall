@@ -40,6 +40,12 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
         return new PageUtils(page);
     }
 
+    /**
+     * 通过catalogId返回属性分组
+     * @param params
+     * @param catelogId
+     * @return
+     */
     @Override
     public PageUtils queryPage(Map<String, Object> params, Long catelogId) {
 
@@ -60,7 +66,7 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
             );
             return new PageUtils(page);
         } else {
-
+            queryWrapper.eq("catelog_id",catelogId);
             IPage<AttrGroupEntity> page = this.page(new Query<AttrGroupEntity>().getPage(params), queryWrapper);
 
             return new PageUtils(page);
