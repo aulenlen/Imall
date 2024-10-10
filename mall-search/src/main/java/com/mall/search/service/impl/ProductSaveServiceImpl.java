@@ -27,7 +27,7 @@ public class ProductSaveServiceImpl implements ProductSaveService {
     private RestHighLevelClient client;
 
     /**
-     * 商品上架，写入es
+     * 商品上架，将商品信息写入es
      * @param skuEsModels
      * @return
      * @throws IOException

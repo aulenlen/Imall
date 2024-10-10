@@ -211,33 +211,32 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         List<Long> skuIdList = skuInfoEntities.stream().map(skuInfoEntity -> {
             return skuInfoEntity.getSkuId();
         }).collect(Collectors.toList());
-
         Map<Long, Boolean> stockMap = null;
         //远程查询库存
         try {
             R r = wareFeignService.getSkusHasStock(skuIdList);
             List<SkuHasStockVo> skuHasStockVos = (List<SkuHasStockVo>) r.get("data");
-            skuHasStockVos.stream().collect(Collectors.toMap(SkuHasStockVo::getSkuId, i -> i.getIsHas()));
+            stockMap = skuHasStockVos.stream().collect(Collectors.toMap(SkuHasStockVo::getSkuId, i -> i.getIsHas()));
         } catch (Exception e) {
             log.error("远程查询库存异常");
         }
+
         //属性赋值
         Map<Long, Boolean> finalStockMap = stockMap;
         List<SkuEsModel> collect = skuInfoEntities.stream().map(sku -> {
             SkuEsModel skuEsModel = new SkuEsModel();
             BeanUtils.copyProperties(sku, skuEsModel);
-
+            //赋值库存信息
             if (finalStockMap == null) {
                 skuEsModel.setHasStock(true);
             } else {
                 skuEsModel.setHasStock(finalStockMap.get(sku.getSkuId()));
             }
-
+            //赋值spuId对应属性信息
             List<ProductAttrValueEntity> attrValueEntities = productAttrValueService.getBySpuId(spuId);
             List<Long> attrIds = attrValueEntities.stream().map(item -> {
                 return item.getAttrId();
             }).collect(Collectors.toList());
-
             List<Long> attrEntityIds = attrService.selectSearchAttrs(attrIds);
             HashSet<Long> idSet = new HashSet<>(attrEntityIds);
             List<SkuEsModel.Attrs> attrsList = attrValueEntities.stream().filter(item -> {
@@ -264,7 +263,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             return skuEsModel;
         }).collect(Collectors.toList());
 
-        //写入elastic
+        //远程调用search服务（ElasticSaveController）写入elastic
         R r = searchFeignService.productStatusUp(collect);
         if (r.getCode() == 0) {
             //TODO
@@ -274,4 +273,15 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
         }
     }
+
+    /**
+     * 测试上架
+     * @param spuId
+     */
+    public void up(Long spuId){
+        List<SkuInfoEntity> skuInfoEntities = skuInfoService.listBySpuId(spuId);
+
+
+    }
 }
+
