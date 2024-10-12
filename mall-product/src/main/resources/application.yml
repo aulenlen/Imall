@@ -1,19 +1,4 @@
-spring:
-  datasource:
-    type: com.alibaba.druid.pool.DruidDataSource
-    password: root
-    username: root
-    url: jdbc:mysql://192.168.230.138:3306/mall_pms?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 127.0.0.1:8848
-  alicloud:
-    secret-key: JqqssSHgYln5IVpbUkVYe3QKqXiTZ6
-    access-key: LTAI5tBzT2sa824SSAYeezir
-    oss:
-      endpoint: oss-cn-hangzhou.aliyuncs.com
+
 
   application:
     name: mall-product
