@@ -60,7 +60,6 @@ public class SkuSaleAttrValueController {
     //@RequiresPermissions("product:skusaleattrvalue:save")
     public R save(@RequestBody SkuSaleAttrValueEntity skuSaleAttrValue){
 		skuSaleAttrValueService.save(skuSaleAttrValue);
-
         return R.ok();
     }
 

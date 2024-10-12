@@ -1,11 +1,12 @@
 package com.mall.product.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.mall.product.entity.AttrAttrgroupRelationEntity;
 import com.mall.product.entity.AttrEntity;
-import com.mall.product.service.AttrAttrgroupRelationService;
+import com.mall.product.entity.ProductAttrValueEntity;
 import com.mall.product.service.AttrService;
+import com.mall.product.service.ProductAttrValueService;
 import com.mall.product.vo.AttrGroupWithAttrsVo;
+import com.mall.product.vo.SkuItemVo;
+import com.mall.product.vo.SpuItemGroupAttrVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,8 @@ import org.springframework.util.StringUtils;
 public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEntity> implements AttrGroupService {
     @Autowired
     private AttrService attrService;
+    @Autowired
+    private ProductAttrValueService productAttrValueService;
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<AttrGroupEntity> page = this.page(
@@ -88,6 +91,18 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
 
 
         return collect;
+    }
+
+    /**
+     * 通过spuId、catalogId获取属性分组和属性`
+     * @param spuId
+     * @param catalogId
+     * @return
+     */
+    @Override
+    public List<SpuItemGroupAttrVo> getAttrGroupWithAttrsBySpuId(Long spuId, Long catalogId) {
+
+        return baseMapper.getAttrGroupWithAttrsBySpuId(spuId,catalogId);
     }
 
 }
