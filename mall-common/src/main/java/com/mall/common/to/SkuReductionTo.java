@@ -1,5 +1,6 @@
 package com.mall.common.to;
 
+import com.mall.common.vo.MemberPrice;
 import lombok.Data;
 
 import java.math.BigDecimal;
