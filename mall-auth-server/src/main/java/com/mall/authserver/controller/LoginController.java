@@ -1,12 +1,11 @@
 package com.mall.authserver.controller;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
 import com.mall.authserver.feign.MemberFeignService;
 import com.mall.authserver.feign.ThirdPartFeignService;
 import com.mall.authserver.vo.UserLoginVo;
 import com.mall.authserver.vo.UserRegisterVo;
-import com.mall.common.constant.AuthServerConstant;
+import com.mall.common.constant.AuthConstant;
 import com.mall.common.exception.BizCodeEnum;
 import com.mall.common.utils.R;
 import com.mall.common.vo.MemberRespVo;
@@ -45,7 +44,7 @@ public class LoginController {
     @ResponseBody
     @GetMapping("/sms/sendcode")
     public R sendCode(@RequestParam("phone") String phone) {
-        String redisCode = redisTemplate.opsForValue().get(AuthServerConstant.SMS_CODE_CACHE_PREFIX + phone);
+        String redisCode = redisTemplate.opsForValue().get(AuthConstant.SMS_CODE_CACHE_PREFIX + phone);
         if (!StringUtils.isEmpty(redisCode)) {
             long time = Long.parseLong(redisCode.split("_")[1]);
             if (System.currentTimeMillis() - time < 600000) {
@@ -54,7 +53,7 @@ public class LoginController {
         }
 
         String code = UUID.randomUUID().toString().substring(0, 5) + "_" + System.currentTimeMillis();
-        redisTemplate.opsForValue().set(AuthServerConstant.SMS_CODE_CACHE_PREFIX + phone, code, 10, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(AuthConstant.SMS_CODE_CACHE_PREFIX + phone, code, 10, TimeUnit.MINUTES);
         System.out.println(code.split("_")[0]);
 
         thirdPartFeignService.sendCode(phone, code.split("_")[0]);
@@ -80,12 +79,12 @@ public class LoginController {
         }
         //注册
         String codeVo = registerVo.getCode();
-        String redisCode = redisTemplate.opsForValue().get(AuthServerConstant.SMS_CODE_CACHE_PREFIX + registerVo.getPhone());
+        String redisCode = redisTemplate.opsForValue().get(AuthConstant.SMS_CODE_CACHE_PREFIX + registerVo.getPhone());
         if (!StringUtils.isEmpty(redisCode)) {
             String subCode = redisCode.split("_")[0];
             if (codeVo.equals(subCode)) {
                 //删除redis验证码
-                redisTemplate.delete(AuthServerConstant.SMS_CODE_CACHE_PREFIX + registerVo.getPhone());
+                redisTemplate.delete(AuthConstant.SMS_CODE_CACHE_PREFIX + registerVo.getPhone());
                 //验证码通过注册用户
                 R r = memberFeignService.regist(registerVo);
                 if (r.getCode() == 0) {
@@ -124,7 +123,7 @@ public class LoginController {
         if (r.getCode() == 0) {
             MemberRespVo data = r.getData("data", new TypeReference<MemberRespVo>() {
             });
-            session.setAttribute(AuthServerConstant.LOGIN_USER, data);
+            session.setAttribute(AuthConstant.LOGIN_USER, data);
             return "redirect:http://mall.com";
         } else {
             Map<String, String> collect = new HashMap<>();

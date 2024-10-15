@@ -616,7 +616,7 @@
                             <dt>选择[[${attr.attrName}]]</dt>
                             <dd th:each="vals:${attr.attrValues}">
                                 <a class="sku_attr_value"
-                                        th:attr="skus=${vals.skuIds},
+                                   th:attr="skus=${vals.skuIds},
                                    class=${#lists.contains(#strings.listSplit(vals.skuIds,','),item.info.skuId.toString())?'sku_attr_value checked':'sku_attr_value'}">
                                     [[${vals.attrValue}]]
                                 </a>
@@ -627,7 +627,7 @@
 
                 <div class="box-btns clear">
                     <div class="box-btns-one">
-                        <input type="text" name="" id="" value="1"/>
+                        <input type="text" name="" id="numInput" value="1"/>
                         <div class="box-btns-one1">
 
                             <div>
@@ -644,8 +644,8 @@
                         </div>
                     </div>
                     <div class="box-btns-two">
-                        <a href="/static/item/../商品分类\index.html">
-                            立即预约
+                        <a href="#" id="addToCartA" th:attr="skuId=${item.info.skuId}">
+                            加入购物车
                         </a>
                     </div>
                     <div class="box-btns-three">
@@ -1328,24 +1328,30 @@
         //去掉同一行的所有的checked
         $(this).parent().parent().find(".sku_attr_value").removeClass("checked");
 
-        $("a[class='sku_attr_value checked']").each(function(){
+        $("a[class='sku_attr_value checked']").each(function () {
             skus.push($(this).attr("skus").split(","));
         });
         console.log(skus);
 
         //2、取出他们的交集，得到skuId
         var filterEle = skus[0];
-        for(var i = 1;i<skus.length;i++){
+        for (var i = 1; i < skus.length; i++) {
             filterEle = $(filterEle).filter(skus[i]);
         }
 
         console.log(filterEle[0]);
-        location.href = "http://item.mall.com/"+filterEle[0]+".html";
+        location.href = "http://item.mall.com/" + filterEle[0] + ".html";
     })
-    $(function(){
-        $(".sku_attr_value").parent().css({"border":"solid 1px #CCC"});
-        $("a[class='sku_attr_value checked']").parent().css({"border":"solid 1px red"});
+    $(function () {
+        $(".sku_attr_value").parent().css({"border": "solid 1px #CCC"});
+        $("a[class='sku_attr_value checked']").parent().css({"border": "solid 1px red"});
     })
+    $("#addToCartA").click(function () {
+        var num = $("#numInput").val();
+        var skuId = $(this).attr("skuId");
+        location.href = "http://cart.mall.com/addToCart?skuId=" + skuId + "&num=" + num;
+        return false;
+    });
 </script>
 
 </html>

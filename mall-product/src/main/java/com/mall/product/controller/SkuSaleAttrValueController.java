@@ -1,6 +1,7 @@
 package com.mall.product.controller;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +40,11 @@ public class SkuSaleAttrValueController {
         PageUtils page = skuSaleAttrValueService.queryPage(params);
 
         return R.ok().put("page", page);
+    }
+
+    @RequestMapping("/stringlist/{skuId}")
+    public List<String> getSkuSaleAttrValues(@PathVariable("skuId") Long skuId){
+        return skuSaleAttrValueService.getSkuSaleAttrValues(skuId);
     }
 
 
