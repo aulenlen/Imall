@@ -70,6 +70,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
     /**
      * 保存发布商品信息
+     *
      * @param vo
      */
     @Transactional
@@ -148,7 +149,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                     skuImagesEntity.setDefaultImg(img.getDefaultImg());
                     return skuImagesEntity;
                 }).filter(entity -> {
-                    return !StringUtils.isEmpty(entity.getImgUrl()) && entity.getDefaultImg()==1;
+                    return !StringUtils.isEmpty(entity.getImgUrl()) && entity.getDefaultImg() == 1;
                 }).collect(Collectors.toList());
                 skuImagesService.saveBatch(skuImagesEntities);
 
@@ -276,10 +277,24 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     }
 
     /**
+     * 通过skuId获得spuInfo
+     *
+     * @param skuId
+     * @return
+     */
+    @Override
+    public SpuInfoEntity getSpuInfoBySkuId(Long skuId) {
+        SkuInfoEntity skuInfo = skuInfoService.getById(skuId);
+        SpuInfoEntity spuInfoEntity = baseMapper.selectOne(new QueryWrapper<SpuInfoEntity>().eq("id", skuInfo.getSpuId()));
+        return spuInfoEntity;
+    }
+
+    /**
      * 测试上架
+     *
      * @param spuId
      */
-    public void up(Long spuId){
+    public void up(Long spuId) {
         List<SkuInfoEntity> skuInfoEntities = skuInfoService.listBySpuId(spuId);
 
 

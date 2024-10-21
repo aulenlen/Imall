@@ -3,6 +3,7 @@ package com.mall.cart.service;
 import com.mall.cart.vo.CartItemVo;
 import com.mall.cart.vo.CartVo;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public interface CartService {
@@ -17,4 +18,6 @@ public interface CartService {
     void countItem(Long skuId, Integer num);
 
     void deleteItem(Long skuId);
+
+    List<CartItemVo> getCurrentUserItems();
 }

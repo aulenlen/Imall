@@ -16,6 +16,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -156,6 +157,28 @@ public class CartServiceImpl implements CartService {
     public void deleteItem(Long skuId) {
         BoundHashOperations<String, Object, Object> cartOps = getCartOps();
         cartOps.delete(skuId.toString());
+    }
+
+    @Override
+    public List<CartItemVo> getCurrentUserItems() {
+        UserInfoTo userInfoTo = CartInterceptor.threadLocal.get();
+        if (userInfoTo.getUserId() == null) {
+            return null;
+        } else {
+            String key = CART_PREFIX + userInfoTo.getUserId();
+
+            List<CartItemVo> cartItems = getCartItems(key);
+            List<CartItemVo> cartItemVoList = cartItems.stream().filter(i -> i.isChecked()
+            ).map(i -> {
+                R r = productFeignService.getPrice(i.getSkuId());
+                String price = r.getData("data", new TypeReference<String>() {
+                });
+                i.setPrice(new BigDecimal(price));
+                return i;
+            }).collect(Collectors.toList());
+            return cartItemVoList;
+        }
+
     }
 
     /**

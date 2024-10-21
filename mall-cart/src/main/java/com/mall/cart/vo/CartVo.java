@@ -11,7 +11,7 @@ public class CartVo {
     private Integer countType;
 
     private BigDecimal totalAmount;
-    private BigDecimal reduce;
+    private BigDecimal reduce = new BigDecimal("0.00");
 
     public List<CartItemVo> getCartItemList() {
         return cartItemList;
@@ -50,10 +50,13 @@ public class CartVo {
 
         if (cartItemList != null && cartItemList.size() > 0) {
             for (CartItemVo item : cartItemList) {
-                BigDecimal totalPrice = item.getTotalPrice();
-                totalAmount = totalAmount.add(totalPrice);
+                if(item.isChecked() == true){
+                    BigDecimal totalPrice = item.getTotalPrice();
+                    totalAmount = totalAmount.add(totalPrice);
+                }
             }
         }
+        totalAmount.subtract(reduce);
         return totalAmount;
     }
 
