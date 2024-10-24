@@ -3,6 +3,7 @@ package com.mall.product.vo;
 import com.mall.product.entity.SkuImagesEntity;
 import com.mall.product.entity.SkuInfoEntity;
 import com.mall.product.entity.SpuInfoDescEntity;
+import com.mall.product.to.SeckillSkuRedisTo;
 import lombok.Data;
 
 import java.util.List;
@@ -25,5 +26,7 @@ public class SkuItemVo {
 
     //spu参数组合
     private List<SpuItemGroupAttrVo> groupAttrs;
+
+    private SeckillSkuRedisTo seckillSkuRedisTo;
 
 }

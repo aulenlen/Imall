@@ -1,11 +1,10 @@
 package com.mall.order.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.mall.common.to.SecOrderTo;
 import com.mall.common.utils.PageUtils;
 import com.mall.order.entity.OrderEntity;
-import com.mall.order.vo.OrderConfirmVo;
-import com.mall.order.vo.SubmitOrderVo;
-import com.mall.order.vo.SubmitRespVo;
+import com.mall.order.vo.*;
 
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -28,5 +27,13 @@ public interface OrderService extends IService<OrderEntity> {
     OrderEntity getOrderById(String orderSn);
 
     void orderClose(OrderEntity order);
+
+    PayVo getPayVo(String orderSn);
+
+    PageUtils queryListWithItem(Map<String, Object> params);
+
+    String handlePayResult(PayAsyncVo vo);
+
+    void createSeckillOrder(SecOrderTo order);
 }
 

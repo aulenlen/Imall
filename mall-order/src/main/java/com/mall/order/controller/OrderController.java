@@ -34,11 +34,20 @@ public class OrderController {
     /**
      * 列表
      */
-    @RequestMapping("/list")
-    //@RequiresPermissions("order:order:list")
+    @GetMapping("/list")
     public R list(@RequestParam Map<String, Object> params) {
         PageUtils page = orderService.queryPage(params);
+        return R.ok().put("page", page);
+    }
 
+    /**
+     * 查询当前登录用户的登录订单信息
+     * @param params
+     * @return
+     */
+    @PostMapping("/listWithItem")
+    public R listWithItem(@RequestBody Map<String, Object> params) {
+        PageUtils page = orderService.queryListWithItem(params);
         return R.ok().put("page", page);
     }
 

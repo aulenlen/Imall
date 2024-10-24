@@ -4,17 +4,20 @@ import com.alibaba.fastjson.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.mall.common.exception.NoStockException;
 import com.mall.common.to.OrderTo;
+import com.mall.common.to.SecOrderTo;
 import com.mall.common.utils.R;
 import com.mall.common.vo.MemberRespVo;
 import com.mall.order.constant.OrderConstant;
 import com.mall.order.entity.OrderItemEntity;
 import com.mall.common.enume.OrderStatusEnum;
+import com.mall.order.entity.PaymentInfoEntity;
 import com.mall.order.feign.CartFeignService;
 import com.mall.order.feign.MemberFeignService;
 import com.mall.order.feign.ProductFeignService;
 import com.mall.order.feign.WareFeignService;
 import com.mall.order.interceptor.LoginUserInterceptor;
 import com.mall.order.service.OrderItemService;
+import com.mall.order.service.PaymentInfoService;
 import com.mall.order.vo.*;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
@@ -48,6 +51,8 @@ import org.springframework.web.context.request.RequestContextHolder;
 @Service("orderService")
 public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> implements OrderService {
     public static final ThreadLocal<SubmitOrderVo> submitOrderVoThreadLocal = new ThreadLocal<>();
+    @Autowired
+    private PaymentInfoService paymentInfoService;
     @Autowired
     private MemberFeignService memberFeignService;
     @Autowired
@@ -218,6 +223,89 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             BeanUtils.copyProperties(byId, orderTo);
             rabbitTemplate.convertAndSend("order-event-exchange", "order.release.other.#", orderTo);
         }
+    }
+
+    @Override
+    public PayVo getPayVo(String orderSn) {
+        PayVo payVo = new PayVo();
+        OrderEntity orderById = this.getOrderById(orderSn);
+        BigDecimal bigDecimal = orderById.getPayAmount().setScale(2, BigDecimal.ROUND_UP);
+        payVo.setTotal_amount(bigDecimal.toString());
+        payVo.setOut_trade_no(orderById.getOrderSn());
+
+        List<OrderItemEntity> items = orderItemService.list(new QueryWrapper<OrderItemEntity>()
+                .eq("order_sn", orderSn));
+        OrderItemEntity orderItemEntity = items.get(0);
+        payVo.setSubject(orderItemEntity.getSkuName());
+        payVo.setBody(orderItemEntity.getSkuAttrsVals());
+        return payVo;
+    }
+
+    @Override
+    public PageUtils queryListWithItem(Map<String, Object> params) {
+        MemberRespVo memberRespVo = LoginUserInterceptor.loginUser.get();
+        IPage<OrderEntity> page = this.page(
+                new Query<OrderEntity>().getPage(params),
+                new QueryWrapper<OrderEntity>().eq("member_id", memberRespVo.getId())
+                        .orderByDesc("id")
+        );
+        List<OrderEntity> records = page.getRecords();
+        List<OrderEntity> newRecords = records.stream().map(order -> {
+                    List<OrderItemEntity> list = orderItemService.list(new QueryWrapper<OrderItemEntity>().eq("order_sn", order.getOrderSn()));
+                    order.setItemList(list);
+                    return order;
+                }
+        ).collect(Collectors.toList());
+        page.setRecords(newRecords);
+        return new PageUtils(page);
+    }
+
+    /**
+     * 处理支付结果
+     *
+     * @param vo
+     * @return
+     */
+    @Override
+    public String handlePayResult(PayAsyncVo vo) {
+        //交易流水
+        PaymentInfoEntity infoEntity = new PaymentInfoEntity();
+        infoEntity.setAlipayTradeNo(vo.getTrade_no());
+        infoEntity.setOrderSn(vo.getOut_trade_no());
+        infoEntity.setPaymentStatus(vo.getTrade_status());
+        infoEntity.setCallbackTime(vo.getNotify_time());
+        paymentInfoService.save(infoEntity);
+
+        if (vo.getTrade_status().equals("TRADE_SUCCESS") || vo.getTrade_status().equals("TRADE_FINISH")) {
+            String outTradeNo = vo.getOut_trade_no();
+            baseMapper.updateOrderStatus(outTradeNo, OrderStatusEnum.PAYED.getCode());
+        }
+        return "success";
+    }
+
+    /**
+     * 创建秒杀订单
+     *
+     * @param order
+     */
+    @Override
+    @Transactional
+    public void createSeckillOrder(SecOrderTo order) {
+        OrderEntity orderEntity = new OrderEntity();
+        orderEntity.setOrderSn(order.getOrderSn());
+        orderEntity.setMemberId(order.getMemberId());
+        orderEntity.setStatus(OrderStatusEnum.CREATE_NEW.getCode());
+        BigDecimal payment = order.getSeckillPrice().multiply(new BigDecimal(order.getNum()));
+        orderEntity.setPayAmount(payment);
+        baseMapper.insert(orderEntity);
+
+        OrderItemEntity orderItemEntity = new OrderItemEntity();
+        orderItemEntity.setOrderSn(order.getOrderSn());
+        orderItemEntity.setSkuId(order.getSkuId());
+        orderItemEntity.setRealAmount(payment);
+        orderItemEntity.setSkuQuantity(order.getNum());
+
+        orderItemService.save(orderItemEntity);
     }
 
     /**

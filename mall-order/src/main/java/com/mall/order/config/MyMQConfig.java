@@ -16,7 +16,7 @@ public class MyMQConfig {
         HashMap<String, Object> map = new HashMap<>();
         map.put("x-dead-letter-exchange", "order-event-exchange");
         map.put("x-dead-letter-routing-key", "order.release.order");
-        map.put("x-message-ttl", 10000);
+        map.put("x-message-ttl", 60000);
         Queue queue = new Queue("order.delay.queue", true, false, false, map);
         return queue;
     }
@@ -38,6 +38,21 @@ public class MyMQConfig {
                 Binding.DestinationType.QUEUE,
                 "order-event-exchange",
                 "order-create-order",
+                null);
+        return binding;
+    }
+    @Bean
+    public Queue orderSeckillOrderQueue() {
+        Queue queue = new Queue("order.seckill.order.queue", true, false, false);
+        return queue;
+    }
+
+    @Bean
+    public Binding orderSeckillOrderBinding() {
+        Binding binding = new Binding("order.seckill.order.queue",
+                Binding.DestinationType.QUEUE,
+                "order-event-exchange",
+                "order.seckill.order",
                 null);
         return binding;
     }

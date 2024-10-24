@@ -1,9 +1,13 @@
 package com.mall.product.service.impl;
 
+import com.alibaba.fastjson.TypeReference;
+import com.mall.common.utils.R;
 import com.mall.product.entity.SkuImagesEntity;
 import com.mall.product.entity.SpuInfoDescEntity;
 import com.mall.product.entity.SpuInfoEntity;
+import com.mall.product.feign.SeckillFeignService;
 import com.mall.product.service.*;
+import com.mall.product.to.SeckillSkuRedisTo;
 import com.mall.product.vo.SkuItemSaleAttrVo;
 import com.mall.product.vo.SkuItemVo;
 import com.mall.product.vo.SpuItemGroupAttrVo;
@@ -40,6 +44,8 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
     private SkuSaleAttrValueService saleAttrValueService;
     @Autowired
     private ThreadPoolExecutor executor;
+    @Autowired
+    private SeckillFeignService seckillFeignService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -139,7 +145,14 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
             skuItemVo.setImages(skuImagesService.getSkuImagesBySkuId(skuId));
         }, executor);
 
-        CompletableFuture.allOf(saleAttr,spuDes,baseSpu,skuImages).get();
+        //秒杀信息
+        R r = seckillFeignService.getSkuSeckillInfo(skuId);
+        CompletableFuture<Void> seckill = CompletableFuture.runAsync(() -> {
+            skuItemVo.setSeckillSkuRedisTo(r.getData(new TypeReference<SeckillSkuRedisTo>() {
+            }));
+        }, executor);
+
+        CompletableFuture.allOf(saleAttr, spuDes, baseSpu, skuImages, seckill).get();
 
         return skuItemVo;
     }

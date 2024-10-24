@@ -16,4 +16,5 @@ public class CartItemVo {
     private BigDecimal totalPrice;
     private boolean hasStock;
     private BigDecimal weight;
+    private String skuPic;
 }
